@@ -28,7 +28,9 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/sync_policies/exact_time.h>
 
 #include <boost/bind.hpp>
 
@@ -46,10 +48,10 @@ namespace {
 	}
 
 	/// Topic to read point cloud from.
-	constexpr char const * cloud_topic = "points_registered";
+	constexpr char const * cloud_topic = "astrapro/depth/points";
 
 	/// Topic to read image from.
-	constexpr char const * image_topic = "image_color";
+	constexpr char const * image_topic = "astrapro/rgb/image_rect_color";
 }
 
 CameraPoseCalibrationNode::CameraPoseCalibrationNode() :
@@ -308,7 +310,8 @@ bool CameraPoseCalibrationNode::onCalibrateTopic(camera_pose_calibration::Calibr
 	// Synchronize image and point cloud from topic
 	message_filters::Subscriber<sensor_msgs::Image> image_sub(node_handle, image_topic, 1, ros::TransportHints(), &queue);
 	message_filters::Subscriber<sensor_msgs::PointCloud2> cloud_sub(node_handle, cloud_topic, 1, ros::TransportHints(), &queue);
-	message_filters::TimeSynchronizer<sensor_msgs::Image, sensor_msgs::PointCloud2> sync(image_sub, cloud_sub, 10);
+  typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::PointCloud2> ApproxSyncPolicy;
+	message_filters::Synchronizer<ApproxSyncPolicy> sync(ApproxSyncPolicy(10), image_sub, cloud_sub);
 
 	using InputData = std::tuple<sensor_msgs::Image::ConstPtr, sensor_msgs::PointCloud2::ConstPtr>;
 
