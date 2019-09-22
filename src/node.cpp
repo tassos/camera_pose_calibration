@@ -225,7 +225,7 @@ bool CameraPoseCalibrationNode::calibrate(
 	pcl::transformPointCloud(*debug_information.target_cloud, *transformed_target_cloud, Eigen::Affine3d(camera_to_tag.inverse()));
 
 	// copy result to response
-	tf::transformEigenToMsg(camera_to_target, transform);
+	tf::transformEigenToMsg(camera_to_target.inverse(), transform);
 
 	// publish result if necessary
 	calibrated = true;
@@ -258,7 +258,7 @@ bool CameraPoseCalibrationNode::calibrate(
 	detected_pattern_publisher.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", detected_pattern).toImageMsg());
 
 	ROS_INFO_STREAM(cloud->header.frame_id << " to " << tag_frame << " :\n" << camera_to_tag.matrix() );
-	ROS_INFO_STREAM(cloud->header.frame_id << " to " << target_frame << " :\n" << camera_to_target.matrix() );
+	ROS_INFO_STREAM(cloud->header.frame_id << " to " << target_frame << " :\n" << camera_to_target.inverse().matrix() );
 
 	return true;
 }
