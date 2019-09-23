@@ -72,8 +72,8 @@ CameraPoseCalibrationNode::CameraPoseCalibrationNode() :
 	calibrate_server_file  = node_handle.advertiseService("calibrate_file",  &CameraPoseCalibrationNode::onCalibrateFile,  this);
 
 	// parameters
-	publish_transform = getParam(node_handle, "publish_transform", false);
-	publish_rate      = getParam(node_handle, "publish_rate", 1);
+	publish_transform = getParam(node_handle, "publish_transform", true);
+	publish_rate      = getParam(node_handle, "publish_rate", 50);
 
 	if (publish_transform) {
 		tf_timer = node_handle.createTimer(publish_rate, &CameraPoseCalibrationNode::onTfTimeout, this);
@@ -231,7 +231,7 @@ bool CameraPoseCalibrationNode::calibrate(
 	calibrated = true;
 	tf::Transform tf_camera_to_target;
 	transformEigenToTF(camera_to_target, tf_camera_to_target);
-	calibration_transform = tf::StampedTransform(tf_camera_to_target, now, target_frame, cloud->header.frame_id);
+	calibration_transform = tf::StampedTransform(tf_camera_to_target.inverse(), now, cloud->header.frame_id, target_frame);
 	if (publish_transform) {
 		transform_broadcaster.sendTransform(calibration_transform);
 	}
